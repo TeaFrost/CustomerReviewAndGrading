@@ -21,4 +21,5 @@ mở file main.ipynb rồi chạy code trong file ấy là dữ liệu (RAW nhá
 
 
 
-
+trong file này sẽ chứa các D và dataset( cả raw và clean)
+https://drive.google.com/drive/folders/1L13a4RP4YbZt7uhw59xbInVaHQ82hKji
