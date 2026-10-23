@@ -23,3 +23,6 @@ mở file main.ipynb rồi chạy code trong file ấy là dữ liệu (RAW nhá
 
 trong file này sẽ chứa các D và dataset( cả raw và clean)
 https://drive.google.com/drive/folders/1L13a4RP4YbZt7uhw59xbInVaHQ82hKji
+
+hiện tại ở branch của Hào đã có demo, nên anh em nào muốn coi thử thì hãy qua bên đấy( còn main này là để khi anh em chốt được hết rồi thì sẽ push lên mai
+
