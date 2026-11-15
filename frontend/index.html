@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Book Reviews Explorer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+</head>
+
+<body>
+    <header class="hero">
+        <div class="hero-inner">
+            <h1>📚 Amazon Book Reviews Explorer</h1>
+            <p>Explore customer reviews and spot the ones whose star rating contradicts what the text says.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="stats">
+            <div class="stat"><span class="stat-value" id="statTotal">0</span><span class="stat-label">Total
+                    reviews</span></div>
+            <div class="stat"><span class="stat-value" id="statAvg">0</span><span class="stat-label">Average star
+                    rating</span></div>
+            <div class="stat stat-neg"><span class="stat-value" id="statNeg">0</span><span class="stat-label">5 stars
+                    but negative text</span></div>
+            <div class="stat stat-pos"><span class="stat-value" id="statPos">0</span><span class="stat-label">1 star but
+                    positive text</span></div>
+        </section>
+
+        <section class="card">
+            <h3 class="tbl-title">Key insights</h3>
+            <ul class="insights-list" id="insightList"></ul>
+        </section>
+
+        <section class="card filters">
+            <div class="field">
+                <label for="bookSelect">Book</label>
+                <select id="bookSelect">
+                    <option value="ALL">All books</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="flagSelect">Mismatched reviews</label>
+                <select id="flagSelect">
+                    <option value="ALL">All reviews</option>
+                    <option value="high_neg">5 stars but negative</option>
+                    <option value="low_pos">1 star but positive</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="sortSelect">Sort by</label>
+                <select id="sortSelect">
+                    <option value="helpful_DESC">Most helpful</option>
+                    <option value="helpful_ASC">Least helpful</option>
+                    <option value="star_DESC">Highest rating first</option>
+                    <option value="star_ASC">Lowest rating first</option>
+                    <option value="date_DESC">Newest first</option>
+                    <option value="date_ASC">Oldest first</option>
+                    <option value="title_ASC" id="optSortTitle">Book title (A-Z)</option>
+                </select>
+            </div>
+            <button type="button" id="resetBtn" class="btn">Reset filters</button>
+        </section>
+
+        <section class="card">
+            <div class="table-head">
+                <h2 id="tableTitle">Review details</h2>
+                <span class="count" id="rowCount"></span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <colgroup>
+                        <col style="width:22%">
+                        <col style="width:15%">
+                        <col style="width:41%">
+                        <col style="width:10%">
+                        <col style="width:12%">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Book</th>
+                            <th>Rating</th>
+                            <th>Review text</th>
+                            <th>Helpful</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviewsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="charts">
+            <div class="card">
+                <h3>Star rating distribution</h3>
+                <div class="chart-box"><canvas id="starChart"></canvas></div>
+            </div>
+            <div class="card">
+                <h3>Reviews with mismatched ratings</h3>
+                <div class="chart-box"><canvas id="flagChart"></canvas></div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h3 class="tbl-title">Star rating distribution by book</h3>
+            <div class="chart-box tall"><canvas id="bookStarChart"></canvas></div>
+            <p class="note" id="bookChartNote"></p>
+        </section>
+
+        <section class="charts">
+            <div class="card">
+                <h3 class="tbl-title">Review sentiment</h3>
+                <div class="chart-box"><canvas id="sentimentChart"></canvas></div>
+                <p class="note" id="sentimentNote"></p>
+            </div>
+            <div class="card">
+                <h3 class="tbl-title">Mismatch rate across books</h3>
+                <div class="chart-box"><canvas id="boxChart"></canvas></div>
+                <p class="note" id="boxNote"></p>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
