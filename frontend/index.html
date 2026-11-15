@@ -13,7 +13,7 @@
     <header class="hero">
         <div class="hero-inner">
             <h1>📚 Amazon Book Reviews Explorer</h1>
-            <p>Explore customer reviews and spot the ones whose star rating contradicts what the text says.</p>
+            <p>Explore customer reviews and compare each star rating with what the review text says.</p>
         </div>
     </header>
 
@@ -23,10 +23,18 @@
                     reviews</span></div>
             <div class="stat"><span class="stat-value" id="statAvg">0</span><span class="stat-label">Average star
                     rating</span></div>
-            <div class="stat stat-neg"><span class="stat-value" id="statNeg">0</span><span class="stat-label">5 stars
-                    but negative text</span></div>
-            <div class="stat stat-pos"><span class="stat-value" id="statPos">0</span><span class="stat-label">1 star but
-                    positive text</span></div>
+            <div class="stat stat-good_good"><span class="stat-value" id="stat_good_good">0</span><span
+                    class="stat-label">Good rating, good review</span><span class="stat-sub" id="sub_good_good"></span>
+            </div>
+            <div class="stat stat-good_bad"><span class="stat-value" id="stat_good_bad">0</span><span
+                    class="stat-label">Good rating, bad review</span><span class="stat-sub" id="sub_good_bad"></span>
+            </div>
+            <div class="stat stat-bad_good"><span class="stat-value" id="stat_bad_good">0</span><span
+                    class="stat-label">Bad rating, good review</span><span class="stat-sub" id="sub_bad_good"></span>
+            </div>
+            <div class="stat stat-bad_bad"><span class="stat-value" id="stat_bad_bad">0</span><span
+                    class="stat-label">Bad rating, bad review</span><span class="stat-sub" id="sub_bad_bad"></span>
+            </div>
         </section>
 
         <section class="card">
@@ -42,11 +50,13 @@
                 </select>
             </div>
             <div class="field">
-                <label for="flagSelect">Mismatched reviews</label>
+                <label for="flagSelect">Rating vs. review</label>
                 <select id="flagSelect">
                     <option value="ALL">All reviews</option>
-                    <option value="high_neg">5 stars but negative</option>
-                    <option value="low_pos">1 star but positive</option>
+                    <option value="good_good">Good rating, good review</option>
+                    <option value="good_bad">Good rating, bad review</option>
+                    <option value="bad_good">Bad rating, good review</option>
+                    <option value="bad_bad">Bad rating, bad review</option>
                 </select>
             </div>
             <div class="field">
@@ -73,8 +83,8 @@
                 <table>
                     <colgroup>
                         <col style="width:22%">
-                        <col style="width:15%">
-                        <col style="width:41%">
+                        <col style="width:17%">
+                        <col style="width:39%">
                         <col style="width:10%">
                         <col style="width:12%">
                     </colgroup>
@@ -92,35 +102,21 @@
             </div>
         </section>
 
-        <section class="charts">
+        <section class="charts three">
             <div class="card">
                 <h3>Star rating distribution</h3>
                 <div class="chart-box"><canvas id="starChart"></canvas></div>
             </div>
             <div class="card">
-                <h3>Reviews with mismatched ratings</h3>
-                <div class="chart-box"><canvas id="flagChart"></canvas></div>
+                <h3>Rating vs. review groups</h3>
+                <div class="chart-box"><canvas id="groupChart"></canvas></div>
             </div>
-        </section>
-
-        <section class="card">
-            <h3 class="tbl-title">Star rating distribution by book</h3>
-            <div class="chart-box tall"><canvas id="bookStarChart"></canvas></div>
-            <p class="note" id="bookChartNote"></p>
-        </section>
-
-        <section class="charts">
             <div class="card">
-                <h3 class="tbl-title">Review sentiment</h3>
+                <h3>Review sentiment</h3>
                 <div class="chart-box"><canvas id="sentimentChart"></canvas></div>
-                <p class="note" id="sentimentNote"></p>
-            </div>
-            <div class="card">
-                <h3 class="tbl-title">Mismatch rate across books</h3>
-                <div class="chart-box"><canvas id="boxChart"></canvas></div>
-                <p class="note" id="boxNote"></p>
             </div>
         </section>
+        <p class="note" id="groupNote"></p>
     </main>
 
     <script src="script.js"></script>
