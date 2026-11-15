@@ -79,7 +79,7 @@ body {
 /* ---------- Stat cards ---------- */
 .stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 22px;
 }
@@ -497,4 +497,66 @@ td.num {
 
 .chart-box.tall {
     height: 440px;
+}
+
+/* ---------- Four rating vs. review groups ---------- */
+.stat-sub {
+    font-size: 12px;
+    color: #6b778c;
+    margin-top: 2px;
+}
+
+.stat-good_good {
+    border-top-color: #22b573;
+}
+
+.stat-good_bad {
+    border-top-color: #f08c3c;
+}
+
+.stat-bad_good {
+    border-top-color: #7c5cff;
+}
+
+.stat-bad_bad {
+    border-top-color: #e5484d;
+}
+
+.flag-gg {
+    background: #e3f6ec;
+    color: #138a52;
+}
+
+.flag-gb {
+    background: #fdeedd;
+    color: #c2610f;
+}
+
+.flag-bg {
+    background: #ece8ff;
+    color: #6a47e8;
+}
+
+.flag-bb {
+    background: #fde8e9;
+    color: #d13a40;
+}
+
+.charts.three {
+    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 8px;
+}
+
+.charts.three .card {
+    margin-bottom: 0;
+}
+
+main>.note {
+    text-align: center;
+}
+
+@media (max-width: 1000px) {
+    .charts.three {
+        grid-template-columns: 1fr;
+    }
 }
