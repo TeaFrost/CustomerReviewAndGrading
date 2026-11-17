@@ -18,17 +18,33 @@ def get_db_connection():
 def home():
     return "Flask Backend is running successfully!"
 
-@app.route('/api/books', methods=['GET'])
-def get_books():
+@app.route('/api/categories', methods=['GET'])
+def get_categories():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT product_title FROM amazon_reviews WHERE product_title IS NOT NULL LIMIT 50")
-    books = [row['product_title'] for row in cursor.fetchall()]
+    cursor.execute("SELECT DISTINCT product_category FROM amazon_reviews WHERE product_category IS NOT NULL")
+    categories = [row['product_category'] for row in cursor.fetchall()]
     conn.close()
-    return jsonify(books)
+    return jsonify(categories)
 
-@app.route('/api/book-details', methods=['GET'])
-def get_book_details():
+@app.route('/api/products', methods=['GET'])
+def get_products():
+    category = request.args.get('category', default='ALL', type=str)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if category == 'ALL' or not category:
+        cursor.execute("SELECT DISTINCT product_title FROM amazon_reviews WHERE product_title IS NOT NULL LIMIT 50")
+    else:
+        cursor.execute("SELECT DISTINCT product_title FROM amazon_reviews WHERE product_category = ? AND product_title IS NOT NULL LIMIT 50", (category,))
+        
+    products = [row['product_title'] for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(products)
+
+@app.route('/api/product-details', methods=['GET'])
+def get_product_details():
+    category = request.args.get('category', default='ALL', type=str)
     title = request.args.get('title', default='ALL', type=str)
     sort_by = request.args.get('sort', default='helpful', type=str)
     order = request.args.get('order', default='DESC', type=str)
@@ -46,21 +62,22 @@ def get_book_details():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Xây dựng câu truy vấn động linh hoạt
     query = """
-        SELECT review_id, product_title, star_rating, review_body, helpful_votes, review_date, 
+        SELECT review_id, product_title, product_category, star_rating, review_body, helpful_votes, review_date, 
                high_rating_negative_flag, low_rating_positive_flag 
         FROM amazon_reviews 
         WHERE 1=1
     """
     params = []
 
-    # Lọc theo sách nếu không phải ALL
+    if category != 'ALL' and category:
+        query += " AND product_category = ?"
+        params.append(category)
+
     if title != 'ALL' and title:
         query += " AND product_title = ?"
         params.append(title)
 
-    # Lọc theo cờ mâu thuẫn NLP
     if flag_filter == 'high_neg':
         query += " AND high_rating_negative_flag = 1"
     elif flag_filter == 'low_pos':
@@ -75,17 +92,25 @@ def get_book_details():
     reviews_list = [dict(row) for row in rows]
     return jsonify(reviews_list)
 
-@app.route('/api/book-analytics', methods=['GET'])
-def get_book_analytics():
+@app.route('/api/product-analytics', methods=['GET'])
+def get_product_analytics():
+    category = request.args.get('category', default='ALL', type=str)
     title = request.args.get('title', default='ALL', type=str)
     conn = get_db_connection()
     cursor = conn.cursor()
 
     star_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
-    if title == 'ALL' or not title:
-        cursor.execute("SELECT star_rating, COUNT(*) as cnt FROM amazon_reviews GROUP BY star_rating")
-    else:
-        cursor.execute("SELECT star_rating, COUNT(*) as cnt FROM amazon_reviews WHERE product_title = ? GROUP BY star_rating", (title,))
+    
+    base_where = "WHERE 1=1"
+    params = []
+    if category != 'ALL' and category:
+        base_where += " AND product_category = ?"
+        params.append(category)
+    if title != 'ALL' and title:
+        base_where += " AND product_title = ?"
+        params.append(title)
+
+    cursor.execute(f"SELECT star_rating, COUNT(*) as cnt FROM amazon_reviews {base_where} GROUP BY star_rating", params)
     
     for row in cursor.fetchall():
         if row['star_rating'] in star_counts:
@@ -93,11 +118,7 @@ def get_book_analytics():
 
     flags = {"high_rating_negative": 0, "low_rating_positive": 0}
     try:
-        if title == 'ALL' or not title:
-            cursor.execute("SELECT SUM(IFNULL(high_rating_negative_flag, 0)) as h_neg, SUM(IFNULL(low_rating_positive_flag, 0)) as l_pos FROM amazon_reviews")
-        else:
-            cursor.execute("SELECT SUM(IFNULL(high_rating_negative_flag, 0)) as h_neg, SUM(IFNULL(low_rating_positive_flag, 0)) as l_pos FROM amazon_reviews WHERE product_title = ?", (title,))
-        
+        cursor.execute(f"SELECT SUM(IFNULL(high_rating_negative_flag, 0)) as h_neg, SUM(IFNULL(low_rating_positive_flag, 0)) as l_pos FROM amazon_reviews {base_where}", params)
         flag_row = cursor.fetchone()
         if flag_row:
             flags["high_rating_negative"] = flag_row['h_neg'] or 0
