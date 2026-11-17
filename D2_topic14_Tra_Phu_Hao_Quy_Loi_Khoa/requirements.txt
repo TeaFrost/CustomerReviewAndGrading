@@ -1,0 +1,8 @@
+# Environment: Google Colab, Python 3.13
+# Libraries used in main.ipynb (Topic 14 - Amazon Customer Reviews Analysis)
+# Install with: pip install -r requirements.txt
+kaggle==2.0.2
+matplotlib==3.10.0
+numpy==2.1.3
+pandas==2.2.3
+seaborn==0.13.2

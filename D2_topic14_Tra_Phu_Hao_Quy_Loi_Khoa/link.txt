@@ -1,0 +1,2 @@
+GitHub repository: https://github.com/TeaFrost/CustomerReviewAndGrading
+Google Colab https://colab.research.google.com/drive/14R1I7isrjy36x_pKYhDXO7XncdbJIeJE?usp=sharing
