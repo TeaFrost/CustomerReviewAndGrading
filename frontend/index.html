@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amazon Book Reviews - Interactive Explorer Demo</title>
+    <title>Amazon Product Reviews - Interactive Explorer Demo</title>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -13,15 +13,16 @@
         header h1 { margin: 0; font-size: 24px; }
         header p { margin: 5px 0 0 0; color: #bdc3c7; font-size: 14px; }
         
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .container { max-width: 1300px; margin: 30px auto; padding: 0 20px; }
         
         .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
         .card label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--primary); }
-        select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; background: white; cursor: pointer; }
+        select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; cursor: pointer; }
 
-        /* Chia bảng điều khiển thành 3 cột */
-        .controls-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-        @media (max-width: 900px) { .controls-row { grid-template-columns: 1fr; } }
+        /* Chia bảng điều khiển thành 4 cột */
+        .controls-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        @media (max-width: 1100px) { .controls-row { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 600px) { .controls-row { grid-template-columns: 1fr; } }
 
         .table-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -50,6 +51,7 @@
         tr:hover { background-color: #f8f9fa; }
         
         .rating-badge { background: #f39c12; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block; }
+        .category-badge { background: #34495e; color: white; padding: 3px 6px; border-radius: 4px; font-size: 10px; display: inline-block; margin-bottom: 4px;}
         .flag-tag { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-top: 4px; }
         .flag-neg { background: #ffeaa7; color: #d63031; }
         .flag-pos { background: #81ecec; color: #00b894; }
@@ -67,18 +69,24 @@
 <body>
 
     <header>
-        <h1>Amazon Book Reviews - Interactive Explorer Demo</h1>
+        <h1>Amazon Product Reviews - Interactive Explorer Demo</h1>
         <p>Data Science Project Visualization & Customer Review Analytics</p>
     </header>
 
     <div class="container">
-        <!-- Bảng điều khiển 3 cột: Lọc sách | Lọc cờ NLP | Sắp xếp -->
+        <!-- Bảng điều khiển 4 cột -->
         <div class="card">
             <div class="controls-row">
                 <div>
-                    <label for="bookSelect">Filter by Book Title</label>
-                    <select id="bookSelect" onchange="onFilterChanged()">
-                        <option value="ALL">All Books (No Filter)</option>
+                    <label for="categorySelect">Product Category</label>
+                    <select id="categorySelect" onchange="onCategoryChanged()">
+                        <option value="ALL">All Categories</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="productSelect">Filter by Product</label>
+                    <select id="productSelect" onchange="onFilterChanged()">
+                        <option value="ALL">All Products (No Filter)</option>
                     </select>
                 </div>
                 <div>
@@ -98,7 +106,7 @@
                         <option value="star_ASC">Star Rating (1 to 5)</option>
                         <option value="date_DESC">Review Date (Newest first)</option>
                         <option value="date_ASC">Review Date (Oldest first)</option>
-                        <option value="title_ASC" id="optSortTitle">Book Title (A-Z)</option>
+                        <option value="title_ASC" id="optSortTitle">Product Title (A-Z)</option>
                     </select>
                 </div>
             </div>
@@ -113,15 +121,15 @@
             <div class="table-container">
                 <table>
                     <colgroup>
-                        <col style="width: 25%;">
+                        <col style="width: 28%;">
                         <col style="width: 12%;">
-                        <col style="width: 43%;">
+                        <col style="width: 40%;">
                         <col style="width: 10%;">
                         <col style="width: 10%;">
                     </colgroup>
                     <thead>
                         <tr>
-                            <th>Book Title</th>
+                            <th>Product Title</th>
                             <th>Star Rating</th>
                             <th>Review Body</th>
                             <th>Helpful Votes</th>
@@ -153,40 +161,73 @@
     </div>
 
     <script>
-        let currentSelectedBook = "ALL";
+        let currentSelectedCategory = "ALL";
+        let currentSelectedProduct = "ALL";
         let starChartInstance = null;
         let flagChartInstance = null;
 
         window.onload = async function() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/api/books');
-                const books = await response.json();
+                const catResponse = await fetch('http://127.0.0.1:5000/api/categories');
+                const categories = await catResponse.json();
+                const catSelect = document.getElementById('categorySelect');
+                categories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.textContent = cat;
+                    catSelect.appendChild(opt);
+                });
 
-                const select = document.getElementById('bookSelect');
-                books.forEach(title => {
+                await loadProducts("ALL");
+
+                fetchTableData();
+                fetchAnalyticsData();
+            } catch (error) {
+                console.error("Error loading initial data:", error);
+            }
+        };
+
+        async function loadProducts(category) {
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/products?category=${encodeURIComponent(category)}`);
+                const products = await response.json();
+
+                const select = document.getElementById('productSelect');
+                select.innerHTML = '<option value="ALL">All Products (No Filter)</option>';
+                products.forEach(title => {
                     const opt = document.createElement('option');
                     opt.value = title;
                     opt.textContent = title;
                     select.appendChild(opt);
                 });
-
-                fetchTableData();
-                fetchAnalyticsData();
             } catch (error) {
-                console.error("Error loading books:", error);
+                console.error("Error loading products:", error);
             }
-        };
+        }
+
+        async function onCategoryChanged() {
+            const catSelect = document.getElementById('categorySelect');
+            currentSelectedCategory = catSelect.value;
+            currentSelectedProduct = "ALL";
+
+            await loadProducts(currentSelectedCategory);
+            onFilterChanged();
+        }
 
         function onFilterChanged() {
-            const select = document.getElementById('bookSelect');
-            currentSelectedBook = select.value;
+            const prodSelect = document.getElementById('productSelect');
+            currentSelectedProduct = prodSelect.value;
             const optTitle = document.getElementById('optSortTitle');
             
-            if (currentSelectedBook === "ALL") {
-                document.getElementById('tableTitle').textContent = `Customer Reviews Details (All Books)`;
+            if (currentSelectedProduct === "ALL") {
+                if (currentSelectedCategory === "ALL") {
+                    document.getElementById('tableTitle').textContent = `Customer Reviews Details (All Categories & Products)`;
+                } else {
+                    document.getElementById('tableTitle').textContent = `Customer Reviews Details for Category: "${currentSelectedCategory}"`;
+                }
                 optTitle.style.display = "block";
             } else {
-                document.getElementById('tableTitle').textContent = `Customer Reviews Details for: "${currentSelectedBook}"`;
+                document.getElementById('tableTitle').textContent = `Customer Reviews Details for: "${currentSelectedProduct}"`;
                 optTitle.style.display = "none";
                 
                 const sortSelect = document.getElementById('sortSelect');
@@ -208,18 +249,17 @@
             const flagFilter = document.getElementById('flagSelect').value;
 
             try {
-                const url = `http://127.0.0.1:5000/api/book-details?title=${encodeURIComponent(currentSelectedBook)}&sort=${sort_by}&order=${order}&flag=${flagFilter}`;
+                const url = `http://127.0.0.1:5000/api/product-details?category=${encodeURIComponent(currentSelectedCategory)}&title=${encodeURIComponent(currentSelectedProduct)}&sort=${sort_by}&order=${order}&flag=${flagFilter}`;
                 const response = await fetch(url);
                 const reviews = await response.json();
 
                 if (reviews.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="loading">No reviews found matching this flag filter.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="loading">No reviews found matching this filter.</td></tr>`;
                     return;
                 }
 
                 let html = '';
                 reviews.forEach(item => {
-                    // Hiển thị nhãn cờ mâu thuẫn trực tiếp bên dưới sao nếu có
                     let flagBadge = '';
                     if (item.high_rating_negative_flag === 1) {
                         flagBadge = `<br><span class="flag-tag flag-neg">⚠️ High-Rating Negative</span>`;
@@ -227,9 +267,11 @@
                         flagBadge = `<br><span class="flag-tag flag-pos">💡 Low-Rating Positive</span>`;
                     }
 
+                    const categoryBadge = item.product_category ? `<span class="category-badge">${item.product_category}</span><br>` : '';
+
                     html += `
                         <tr>
-                            <td><strong>${item.product_title || ''}</strong></td>
+                            <td>${categoryBadge}<strong>${item.product_title || ''}</strong></td>
                             <td><span class="rating-badge">⭐ ${item.star_rating} Stars</span>${flagBadge}</td>
                             <td style="color: #555; word-break: break-word;">${item.review_body}</td>
                             <td>👍 ${item.helpful_votes || 0}</td>
@@ -247,7 +289,7 @@
 
         async function fetchAnalyticsData() {
             try {
-                const url = `http://127.0.0.1:5000/api/book-analytics?title=${encodeURIComponent(currentSelectedBook)}`;
+                const url = `http://127.0.0.1:5000/api/product-analytics?category=${encodeURIComponent(currentSelectedCategory)}&title=${encodeURIComponent(currentSelectedProduct)}`;
                 const response = await fetch(url);
                 const analytics = await response.json();
 
