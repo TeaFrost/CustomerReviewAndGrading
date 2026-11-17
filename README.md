@@ -19,9 +19,7 @@ CustomerReviewAndGrading/
 │   ├── amazon_reviews.db
 │   └── setup_db.py
 ├── data/
-│   ├── .gitkeep
-│   ├── 2.1_amazon_reviews_webDisplay.csv
-│   └── 2.2_amazon_reviews_modeling.csv
+│   └── 3.amazon_reviews_nlp_results.csv
 ├── frontend/
 │   └── index.html
 ├── .gitignore
@@ -82,10 +80,9 @@ pip install -r requirements.txt
 
 ### Step 4: Download Datasets & Setup Database
 
-1. Download the two processed CSV datasets from Google Drive:
-   - [`2.1_amazon_reviews_webDisplay.csv`](https://drive.google.com/drive/folders/1L13a4RP4YbZt7uhw59xbInVaHQ82hKji?hl=vi)
-   - [`2.2_amazon_reviews_modeling.csv`](https://drive.google.com/drive/folders/1L13a4RP4YbZt7uhw59xbInVaHQ82hKji?hl=vi)
-2. Place both CSV files into the `data/` directory.
+1. Download the processed CSV datasets from Google Drive:
+   - [`3.amazon_reviews_nlp_results.csv`](https://drive.google.com/file/d/1pYCbviAGtbAD7UD7M_sHiaP3_aJibIBT/view?usp=sharing)
+2. Place this CSV files into the `data/` directory.
 3. Run the database setup script:
    ```bash
    python database/setup_db.py
@@ -103,10 +100,3 @@ python backend/app.py
 ### Step 6: Launch the Frontend Dashboard
 
 Open `frontend/index.html` directly in your web browser (or use the VS Code **Live Server** extension).
-
-## 📊 Dataset Sources & Processing Pipeline
-
-- **Raw Data Generation:** Initial data generation and exploration via Kaggle Notebook: [Generate Amazon Book Reviews with Transformers](https://www.kaggle.com/code/quackaddict7/generate-amazon-book-reviews-with-transformers).
-- **Data Preprocessing & Cleaning:** Text cleaning, feature engineering, and computing NLP mismatch flags via Kaggle Notebook: [Preprocess Amazon Book Reviews](https://www.kaggle.com/code/nguynthehao/preprocess-amazon-book-reviews).
-- **Web Display Data (`2.1_amazon_reviews_webDisplay.csv`):** Cleaned data containing text, star ratings, helpful votes, and NLP mismatch flag columns (`high_rating_negative_flag`, `low_rating_positive_flag`).
-- **Modeling Data (`2.2_amazon_reviews_modeling.csv`):** Dedicated dataset utilized for training and NLP model pipelines inside `main.ipynb`.
