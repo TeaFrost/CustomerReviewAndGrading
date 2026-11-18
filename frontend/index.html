@@ -1,353 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amazon Product Reviews - Interactive Explorer Demo</title>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--bg); color: #333; }
-        header { background-color: var(--primary); color: white; padding: 25px 40px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        header h1 { margin: 0; font-size: 24px; }
-        header p { margin: 5px 0 0 0; color: #bdc3c7; font-size: 14px; }
-        
-        .container { max-width: 1300px; margin: 30px auto; padding: 0 20px; }
-        
-        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .card label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--primary); }
-        select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; cursor: pointer; }
-
-        /* Chia bảng điều khiển thành 4 cột */
-        .controls-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        @media (max-width: 1100px) { .controls-row { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 600px) { .controls-row { grid-template-columns: 1fr; } }
-
-        .table-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .table-header h3 { margin: 0; color: var(--primary); }
-        
-        .table-container { 
-            max-height: 480px; 
-            overflow-y: auto; 
-            border: 1px solid #eee; 
-            border-radius: 6px; 
-        }
-
-        table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; }
-        th, td { padding: 14px 16px; border-bottom: 1px solid #eee; font-size: 14px; word-wrap: break-word; overflow: hidden; }
-        
-        th { 
-            background-color: #f1f2f6; 
-            color: var(--primary); 
-            font-weight: bold; 
-            position: sticky; 
-            top: 0; 
-            z-index: 10; 
-            box-shadow: inset 0 -2px 0 #dfe4ea;
-        }
-
-        tr:hover { background-color: #f8f9fa; }
-        
-        .rating-badge { background: #f39c12; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block; }
-        .category-badge { background: #34495e; color: white; padding: 3px 6px; border-radius: 4px; font-size: 10px; display: inline-block; margin-bottom: 4px;}
-        .flag-tag { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-top: 4px; }
-        .flag-neg { background: #ffeaa7; color: #d63031; }
-        .flag-pos { background: #81ecec; color: #00b894; }
-
-        .loading { text-align: center; padding: 40px; color: #666; font-size: 15px; }
-
-        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-        @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
-        
-        .chart-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .chart-card h4 { margin: 0 0 15px 0; color: var(--primary); font-size: 16px; text-align: center; }
-        .chart-wrapper { position: relative; height: 280px; width: 100%; }
-    </style>
+    <title>Amazon Reviews Explorer</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js CDN for interactive visual analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 </head>
-<body>
 
-    <header>
-        <h1>Amazon Product Reviews - Interactive Explorer Demo</h1>
-        <p>Data Science Project Visualization & Customer Review Analytics</p>
+<body>
+    <!-- Header Hero Section -->
+    <header class="hero">
+        <div class="hero-inner">
+            <h1>📚 Amazon Reviews Explorer</h1>
+            <p>Explore customer reviews and compare each star rating with what the review text says.</p>
+        </div>
     </header>
 
-    <div class="container">
-        <!-- Bảng điều khiển 4 cột -->
-        <div class="card">
-            <div class="controls-row">
-                <div>
-                    <label for="categorySelect">Product Category</label>
-                    <select id="categorySelect" onchange="onCategoryChanged()">
-                        <option value="ALL">All Categories</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="productSelect">Filter by Product</label>
-                    <select id="productSelect" onchange="onFilterChanged()">
-                        <option value="ALL">All Products (No Filter)</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="flagSelect">Filter NLP Mismatch Flags</label>
-                    <select id="flagSelect" onchange="onFilterChanged()">
-                        <option value="ALL">All Reviews (No Flag Filter)</option>
-                        <option value="high_neg">High Rating Negative (5⭐ but Negative)</option>
-                        <option value="low_pos">Low Rating Positive (1⭐ but Positive)</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="sortSelect">Sort Options</label>
-                    <select id="sortSelect" onchange="onFilterChanged()">
-                        <option value="helpful_DESC">Helpful Votes (High to Low)</option>
-                        <option value="helpful_ASC">Helpful Votes (Low to High)</option>
-                        <option value="star_DESC">Star Rating (5 to 1)</option>
-                        <option value="star_ASC">Star Rating (1 to 5)</option>
-                        <option value="date_DESC">Review Date (Newest first)</option>
-                        <option value="date_ASC">Review Date (Oldest first)</option>
-                        <option value="title_ASC" id="optSortTitle">Product Title (A-Z)</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+    <main class="container">
 
-        <!-- Bảng hiển thị chi tiết -->
-        <div class="table-card">
-            <div class="table-header">
-                <h3 id="tableTitle">Customer Reviews Details</h3>
+        <!-- Search & Category Selection Card -->
+        <section class="card search-card">
+            <label class="search-label" for="searchInput">Find a category</label>
+            <div class="search" id="searchBox" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+                <div class="search-bar">
+                    <svg class="search-ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <input type="text" id="searchInput" placeholder="Search for a category..." autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-controls="suggestList">
+                    <button type="button" id="searchClear" class="search-clear" aria-label="Clear search" hidden>&times;</button>
+                </div>
+                <ul class="suggestions" id="suggestList" role="listbox" hidden></ul>
             </div>
-            
-            <div class="table-container">
+        </section>
+
+        <!-- Filters Section -->
+        <section class="card filters">
+            <div class="field">
+                <label for="productSelect">Product</label>
+                <select id="productSelect" disabled>
+                    <option value="ALL">Search a category first</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="flagSelect">Rating vs review</label>
+                <select id="flagSelect">
+                    <option value="ALL">All reviews</option>
+                    <option value="good_good">Good rating, good review</option>
+                    <option value="good_bad">Good rating, bad review</option>
+                    <option value="bad_good">Bad rating, good review</option>
+                    <option value="bad_bad">Bad rating, bad review</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="sortSelect">Sort by</label>
+                <select id="sortSelect">
+                    <option value="helpful_DESC">Most helpful</option>
+                    <option value="helpful_ASC">Least helpful</option>
+                    <option value="star_DESC">Highest rating first</option>
+                    <option value="star_ASC">Lowest rating first</option>
+                    <option value="date_DESC">Newest first</option>
+                    <option value="date_ASC">Oldest first</option>
+                    <option value="title_ASC">Product name (A-Z)</option>
+                </select>
+            </div>
+            <button type="button" id="resetBtn" class="btn">Reset filters</button>
+        </section>
+
+        <!-- Key Performance Indicators (KPIs) Summary Section -->
+        <section class="kpis" aria-label="Summary">
+            <div class="kpi">
+                <div class="kpi-label">Total reviews</div>
+                <div class="kpi-value" id="kpiTotal">-</div>
+                <div class="kpi-sub" id="kpiTotalSub">in the current selection</div>
+            </div>
+            <div class="kpi k-star">
+                <div class="kpi-label">Average rating</div>
+                <div class="kpi-value" id="kpiAvg">-</div>
+                <div class="kpi-sub">out of 5 stars</div>
+            </div>
+            <div class="kpi k-good">
+                <div class="kpi-label">Stars match text</div>
+                <div class="kpi-value" id="kpiAgree">-</div>
+                <div class="kpi-sub">rating agrees with the review</div>
+            </div>
+            <div class="kpi k-bad">
+                <div class="kpi-label">Mismatched</div>
+                <div class="kpi-value" id="kpiMismatch">-</div>
+                <div class="kpi-sub" id="kpiMismatchSub">rating contradicts the review</div>
+            </div>
+        </section>
+
+        <!-- Master-Detail Review Table Section -->
+        <section class="card">
+            <div class="table-head">
+                <h2 id="tableTitle">Review details</h2>
+                <span class="count" id="rowCount"></span>
+            </div>
+            <div class="table-wrap">
                 <table>
                     <colgroup>
-                        <col style="width: 28%;">
-                        <col style="width: 12%;">
-                        <col style="width: 40%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
+                        <col style="width:22%">
+                        <col style="width:20%">
+                        <col style="width:35%">
+                        <col style="width:10%">
+                        <col style="width:13%">
                     </colgroup>
                     <thead>
                         <tr>
-                            <th>Product Title</th>
-                            <th>Star Rating</th>
-                            <th>Review Body</th>
-                            <th>Helpful Votes</th>
-                            <th>Review Date</th>
+                            <th>Product</th>
+                            <th>Rating</th>
+                            <th>Review text</th>
+                            <th>Helpful</th>
+                            <th>Date</th>
                         </tr>
                     </thead>
-                    <tbody id="reviewsTableBody">
-                        <tr><td colspan="5" class="loading">Loading data...</td></tr>
-                    </tbody>
+                    <tbody id="reviewsTableBody"></tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <!-- 2 Biểu đồ song song -->
-        <div class="charts-row">
-            <div class="chart-card">
-                <h4>⭐ Star Rating Distribution</h4>
-                <div class="chart-wrapper">
-                    <canvas id="starChart"></canvas>
-                </div>
+        <!-- Visual Analytics Section -->
+        <h2 class="section-title">Analytics</h2>
+        <section class="charts three">
+            <div class="card">
+                <h3>Star rating distribution</h3>
+                <div class="chart-box"><canvas id="starChart"></canvas></div>
+                <div class="lg" id="starLegend"></div>
             </div>
-            <div class="chart-card">
-                <h4>🚩 NLP Sentiment Mismatch Flags</h4>
-                <div class="chart-wrapper">
-                    <canvas id="flagChart"></canvas>
-                </div>
+            <div class="card">
+                <h3>Rating vs review groups</h3>
+                <div class="chart-box"><canvas id="groupChart"></canvas></div>
+                <div class="lg" id="groupLegend"></div>
             </div>
-        </div>
-    </div>
+            <div class="card">
+                <h3>Review sentiment</h3>
+                <div class="chart-box donut"><canvas id="sentimentChart"></canvas></div>
+                <div class="lg" id="sentimentLegend"></div>
+            </div>
+        </section>
+        <p class="note" id="groupNote"></p>
 
-    <script>
-        let currentSelectedCategory = "ALL";
-        let currentSelectedProduct = "ALL";
-        let starChartInstance = null;
-        let flagChartInstance = null;
+        <!-- Key Insights Section -->
+        <section class="card insights">
+            <h3 class="tbl-title">Key insights</h3>
+            <ul class="insights-list" id="insightList"></ul>
+        </section>
+    </main>
 
-        window.onload = async function() {
-            try {
-                const catResponse = await fetch('http://127.0.0.1:5000/api/categories');
-                const categories = await catResponse.json();
-                const catSelect = document.getElementById('categorySelect');
-                categories.forEach(cat => {
-                    const opt = document.createElement('option');
-                    opt.value = cat;
-                    opt.textContent = cat;
-                    catSelect.appendChild(opt);
-                });
-
-                await loadProducts("ALL");
-
-                fetchTableData();
-                fetchAnalyticsData();
-            } catch (error) {
-                console.error("Error loading initial data:", error);
-            }
-        };
-
-        async function loadProducts(category) {
-            try {
-                const response = await fetch(`http://127.0.0.1:5000/api/products?category=${encodeURIComponent(category)}`);
-                const products = await response.json();
-
-                const select = document.getElementById('productSelect');
-                select.innerHTML = '<option value="ALL">All Products (No Filter)</option>';
-                products.forEach(title => {
-                    const opt = document.createElement('option');
-                    opt.value = title;
-                    opt.textContent = title;
-                    select.appendChild(opt);
-                });
-            } catch (error) {
-                console.error("Error loading products:", error);
-            }
-        }
-
-        async function onCategoryChanged() {
-            const catSelect = document.getElementById('categorySelect');
-            currentSelectedCategory = catSelect.value;
-            currentSelectedProduct = "ALL";
-
-            await loadProducts(currentSelectedCategory);
-            onFilterChanged();
-        }
-
-        function onFilterChanged() {
-            const prodSelect = document.getElementById('productSelect');
-            currentSelectedProduct = prodSelect.value;
-            const optTitle = document.getElementById('optSortTitle');
-            
-            if (currentSelectedProduct === "ALL") {
-                if (currentSelectedCategory === "ALL") {
-                    document.getElementById('tableTitle').textContent = `Customer Reviews Details (All Categories & Products)`;
-                } else {
-                    document.getElementById('tableTitle').textContent = `Customer Reviews Details for Category: "${currentSelectedCategory}"`;
-                }
-                optTitle.style.display = "block";
-            } else {
-                document.getElementById('tableTitle').textContent = `Customer Reviews Details for: "${currentSelectedProduct}"`;
-                optTitle.style.display = "none";
-                
-                const sortSelect = document.getElementById('sortSelect');
-                if(sortSelect.value === 'title_ASC') {
-                    sortSelect.value = 'helpful_DESC';
-                }
-            }
-
-            fetchTableData();
-            fetchAnalyticsData();
-        }
-
-        async function fetchTableData() {
-            const tbody = document.getElementById('reviewsTableBody');
-            tbody.innerHTML = `<tr><td colspan="5" class="loading">Loading data from database...</td></tr>`;
-
-            const sortSelectVal = document.getElementById('sortSelect').value;
-            const [sort_by, order] = sortSelectVal.split('_');
-            const flagFilter = document.getElementById('flagSelect').value;
-
-            try {
-                const url = `http://127.0.0.1:5000/api/product-details?category=${encodeURIComponent(currentSelectedCategory)}&title=${encodeURIComponent(currentSelectedProduct)}&sort=${sort_by}&order=${order}&flag=${flagFilter}`;
-                const response = await fetch(url);
-                const reviews = await response.json();
-
-                if (reviews.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="loading">No reviews found matching this filter.</td></tr>`;
-                    return;
-                }
-
-                let html = '';
-                reviews.forEach(item => {
-                    let flagBadge = '';
-                    if (item.high_rating_negative_flag === 1) {
-                        flagBadge = `<br><span class="flag-tag flag-neg">⚠️ High-Rating Negative</span>`;
-                    } else if (item.low_rating_positive_flag === 1) {
-                        flagBadge = `<br><span class="flag-tag flag-pos">💡 Low-Rating Positive</span>`;
-                    }
-
-                    const categoryBadge = item.product_category ? `<span class="category-badge">${item.product_category}</span><br>` : '';
-
-                    html += `
-                        <tr>
-                            <td>${categoryBadge}<strong>${item.product_title || ''}</strong></td>
-                            <td><span class="rating-badge">⭐ ${item.star_rating} Stars</span>${flagBadge}</td>
-                            <td style="color: #555; word-break: break-word;">${item.review_body}</td>
-                            <td>👍 ${item.helpful_votes || 0}</td>
-                            <td>📅 ${item.review_date || 'N/A'}</td>
-                        </tr>
-                    `;
-                });
-                tbody.innerHTML = html;
-
-            } catch (error) {
-                console.error("Error:", error);
-                tbody.innerHTML = `<tr><td colspan="5" class="loading" style="color: red;">Failed to connect to backend!</td></tr>`;
-            }
-        }
-
-        async function fetchAnalyticsData() {
-            try {
-                const url = `http://127.0.0.1:5000/api/product-analytics?category=${encodeURIComponent(currentSelectedCategory)}&title=${encodeURIComponent(currentSelectedProduct)}`;
-                const response = await fetch(url);
-                const analytics = await response.json();
-
-                renderStarChart(analytics.star_distribution);
-                renderFlagChart(analytics.sentiment_mismatch_flags);
-            } catch (error) {
-                console.error("Error loading analytics:", error);
-            }
-        }
-
-        function renderStarChart(dataPoints) {
-            const ctx = document.getElementById('starChart').getContext('2d');
-            if (starChartInstance) starChartInstance.destroy();
-
-            starChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
-                    datasets: [{
-                        label: 'Review Count',
-                        data: dataPoints,
-                        backgroundColor: ['#e74c3c', '#e67e22', '#f1c40f', '#3498db', '#2ecc71'],
-                        borderRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                }
-            });
-        }
-
-        function renderFlagChart(dataPoints) {
-            const ctx = document.getElementById('flagChart').getContext('2d');
-            if (flagChartInstance) flagChartInstance.destroy();
-
-            flagChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['High Rating Negative', 'Low Rating Positive'],
-                    datasets: [{
-                        label: 'Total Mismatch Flags',
-                        data: dataPoints,
-                        backgroundColor: ['#e74c3c', '#9b59b6'],
-                        borderRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                }
-            });
-        }
-    </script>
-
+    <!-- Main JavaScript Logic -->
+    <script src="script.js"></script>
 </body>
+
 </html>
