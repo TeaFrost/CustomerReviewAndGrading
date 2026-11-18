@@ -4,7 +4,7 @@
 Instructor: Nguyen Thi Thuy Loan · Topic 14
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TeaFrost/CustomerReviewAndGrading/blob/D3_Analyze/D3_Topic14_Tra_Hao_Phu_Loi_Quy_Khoa.ipynb)
-
+link to github: https://github.com/TeaFrost/CustomerReviewAndGrading.git
 ---
 
 ## 1. Team
