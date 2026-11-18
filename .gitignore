@@ -1,6 +1,0 @@
-*.csv
-*.json
-*.parquet
-data/
-kaggle.json
-.DS_Store
