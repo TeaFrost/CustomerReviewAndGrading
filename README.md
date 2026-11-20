@@ -58,9 +58,7 @@ The notebook `D3_Topic14_Tra_Hao_Phu_Loi_Quy_Khoa.ipynb` follows this order:
 CustomerReviewAndGrading/
 ├── D3_Topic14_Tra_Hao_Phu_Loi_Quy_Khoa.ipynb   # analysis notebook (run, with outputs)
 ├── README.md                                   # this file
-├── requirements.txt                            # Python dependencies
-├── .gitignore                                  # excludes the large CSV file
-└── figures/                                    # (optional) exported charts, PNG
+└── requirements.txt                            # Python dependencies
 ```
 
 > The dataset is **not** stored in this repository because of its size. The notebook downloads it automatically (see section 6).
