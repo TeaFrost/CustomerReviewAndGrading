@@ -1,0 +1,2 @@
+GitHub repository: https://github.com/TeaFrost/CustomerReviewAndGrading/tree/D3_Analyze
+Google Colab: https://colab.research.google.com/github/TeaFrost/CustomerReviewAndGrading/blob/D3_Analyze/D3_Topic14_Tra_Hao_Phu_Loi_Quy_Khoa.ipynb
