@@ -17,6 +17,18 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row  # Enables column access by name
     return conn
 
+def apply_flag_filter(clause, params, flag_filter):
+    """Append sentiment-vs-rating group filter conditions to a SQL WHERE clause."""
+    if flag_filter == 'good_good':
+        clause += " AND star_rating >= 4 AND (high_rating_negative_flag = 0 OR high_rating_negative_flag IS NULL)"
+    elif flag_filter == 'good_bad':
+        clause += " AND high_rating_negative_flag = 1"
+    elif flag_filter == 'bad_good':
+        clause += " AND low_rating_positive_flag = 1"
+    elif flag_filter == 'bad_bad':
+        clause += " AND star_rating <= 2 AND (low_rating_positive_flag = 0 OR low_rating_positive_flag IS NULL)"
+    return clause, params
+
 @app.route('/')
 def home():
     """Health check endpoint to verify if the Flask server is running."""
@@ -56,10 +68,10 @@ def get_product_details():
     supporting multi-criteria filters (category, product, sort order, and sentiment flags).
     """
     category = request.args.get('category', default='ALL', type=str)
-    title = request.args.get('title', default='ALL', type=str)
+    title = request.args.get('product') or request.args.get('title') or 'ALL'
     sort_by = request.args.get('sort', default='helpful', type=str)
     order = request.args.get('order', default='DESC', type=str)
-    flag_filter = request.args.get('flag', default='ALL', type=str) # Accepts: good_good, good_bad, bad_good, bad_bad
+    flag_filter = request.args.get('flag', default='ALL', type=str)  # Accepts: good_good, good_bad, bad_good, bad_bad
 
     # Map sorting parameters to actual database columns
     valid_columns = {
@@ -74,35 +86,26 @@ def get_product_details():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    query = """
+    where_clause = "WHERE 1=1"
+    params = []
+
+    if category != 'ALL' and category:
+        where_clause += " AND product_category = ?"
+        params.append(category)
+
+    if title != 'ALL' and title:
+        where_clause += " AND product_title = ?"
+        params.append(title)
+
+    where_clause, params = apply_flag_filter(where_clause, params, flag_filter)
+
+    query = f"""
         SELECT review_id, product_title, product_category, star_rating, review_body, helpful_votes, review_date, 
                high_rating_negative_flag, low_rating_positive_flag 
         FROM amazon_reviews 
-        WHERE 1=1
+        {where_clause}
+        ORDER BY {column_to_sort} {sort_order} LIMIT 50
     """
-    params = []
-
-    # Apply category filter if specified
-    if category != 'ALL' and category:
-        query += " AND product_category = ?"
-        params.append(category)
-
-    # Apply product title filter if specified
-    if title != 'ALL' and title:
-        query += " AND product_title = ?"
-        params.append(title)
-
-    # Apply sentiment mismatch or alignment flags based on frontend selection
-    if flag_filter == 'good_good':
-        query += " AND star_rating >= 4 AND (high_rating_negative_flag = 0 OR high_rating_negative_flag IS NULL)"
-    elif flag_filter == 'good_bad':
-        query += " AND high_rating_negative_flag = 1"
-    elif flag_filter == 'bad_good':
-        query += " AND low_rating_positive_flag = 1"
-    elif flag_filter == 'bad_bad':
-        query += " AND star_rating <= 2 AND (low_rating_positive_flag = 0 OR low_rating_positive_flag IS NULL)"
-
-    query += f" ORDER BY {column_to_sort} {sort_order} LIMIT 50"
 
     cursor.execute(query, params)
     rows = cursor.fetchall()
@@ -116,7 +119,8 @@ def get_product_details():
 def get_product_analytics():
     """Compute star rating distribution and NLP sentiment mismatch aggregations for analytics charts."""
     category = request.args.get('category', default='ALL', type=str)
-    title = request.args.get('title', default='ALL', type=str)
+    title = request.args.get('product') or request.args.get('title') or 'ALL'
+    flag_filter = request.args.get('flag', default='ALL', type=str)
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -130,6 +134,8 @@ def get_product_analytics():
     if title != 'ALL' and title:
         base_where += " AND product_title = ?"
         params.append(title)
+
+    base_where, params = apply_flag_filter(base_where, params, flag_filter)
 
     # Fetch star rating distribution counts
     cursor.execute(f"SELECT star_rating, COUNT(*) as cnt FROM amazon_reviews {base_where} GROUP BY star_rating", params)
