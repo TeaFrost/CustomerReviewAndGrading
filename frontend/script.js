@@ -269,7 +269,11 @@ async function fetchTable(id) {
 /* ---------- Statistics and Charts Analytics ---------- */
 async function fetchAnalytics(id) {
     try {
-        const params = new URLSearchParams({ category: currentCategory, product: $('productSelect').value });
+        const params = new URLSearchParams({
+            category: currentCategory,
+            product: $('productSelect').value,
+            flag: $('flagSelect').value,
+        });
         const res = await fetch(`${API}/product-analytics?${params}`);
         const data = await res.json();
         if (id !== latestRequest) return;
